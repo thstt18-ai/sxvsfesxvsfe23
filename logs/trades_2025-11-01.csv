@@ -1,0 +1,2 @@
+Timestamp,Trade ID,Token In,Token Out,Amount In,Amount Out,Buy DEX,Sell DEX,Profit USD,Gas Cost USD,Net Profit USD,Net Profit %,TX Hash,Status,Error
+"2025-11-01T04:49:56.990Z","0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270-0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174-1761972595611-d42k3uuu9","WMATIC","USDC","10000","0","1inch","Curve","0.00","0.00","0.00","0.00","0x0","failed","Token validation failed for WMATIC: No liquidity pairs found on QuickSwap"
