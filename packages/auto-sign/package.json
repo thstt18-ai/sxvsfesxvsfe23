@@ -1,0 +1,13 @@
+
+{
+  "name": "@workspace/auto-sign",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "deploy": "node deploy.js",
+    "sign": "node sign.js"
+  },
+  "dependencies": {
+    "ethers": "^6.15.0"
+  }
+}
