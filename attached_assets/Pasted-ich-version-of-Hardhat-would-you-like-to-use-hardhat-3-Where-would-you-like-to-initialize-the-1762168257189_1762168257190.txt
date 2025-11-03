@@ -1,0 +1,52 @@
+ich version of Hardhat would you like to use? · hardhat-3
+✔️ Where would you like to initialize the project?
+
+Please provide either a relative or an absolute path: · contracts/my-hardhat-project
+Error HHE10: You are trying to initialize a project inside an existing Hardhat project. The path to the project's configuration file is: /home/runner/workspace/contracts/hardhat.config.ts.
+
+For more info go to https://hardhat.org/HHE10 or run Hardhat with --show-stack-traces
+~/workspace$ 
+
+Welcome to Hardhat v3.0.10 👷
+
+✔️ Which version of Hardhat would you like to use? · hardhat-3
+? Where would you like to initialize the project?
+✔️ Where would you like to initialize the project?
+
+Please provide either a relative or an absolute path: · contracts/my-hardhat-project
+Error HHE10: You are trying to initialize a project inside an existing Hardhat project. The path to the project's configuration file is: /home/runner/workspace/contracts/hardhat.config.ts.
+
+For more info go to https://hardhat.org/HHE10 or run Hardhat with --show-stack-traces
+~/workspace$
+
+It appears that you're attempting to initialize a new Hardhat project in a directory that already contains an existing Hardhat project (indicated by the presence of a  file).
+
+Steps to Resolve the Issue
+Check Current Project Setup: Since you're already in a Hardhat project, you don't need to initialize another one. Instead, you can simply modify the existing setup or work within it.
+
+Use Existing Configuration: Open your  and make any necessary adjustments or add any required plugins or configurations based on your needs.
+
+Verify Existing Dependencies: Ensure that you have all the necessary dependencies installed. You can either update them or add missing ones directly in the  if they are not yet included.
+
+Example Modifications
+If you need to update your existing  to include additional plugins like hardhat-contract-sizer and @typechain/hardhat, here's how you can modify it:
+
+import { HardhatUserConfig } from "hardhat/config";
+import "@nomicfoundation/hardhat-toolbox";
+import "hardhat-contract-sizer"; // Add this line
+import "@typechain/hardhat"; // Add this line
+const config: HardhatUserConfig = {
+  solidity: "0.8.0",
+  contractSizer: {
+    alphaSort: true,
+    runOnCompile: true,
+  },
+  networks: {
+    hardhat: {},
+  },
+};
+export default config;
+Next Steps
+After making the necessary adjustments, you can run the commands to install dependencies and compile the project:
+npm install --legacy-peer-deps
+npm run compile

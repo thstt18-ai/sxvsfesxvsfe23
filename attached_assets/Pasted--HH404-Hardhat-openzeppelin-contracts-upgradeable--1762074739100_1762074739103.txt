@@ -1,0 +1,76 @@
+Ошибка `HH404` указывает, что **Hardhat не может найти файл из `@openzeppelin/contracts-upgradeable`**, несмотря на то, что вы заменили импорты на upgradeable-версии.
+
+Это **типичная проблема при несовместимости версий OpenZeppelin** или **неправильной установке пакета**.
+
+---
+
+### 🔧 Причина
+В **OpenZeppelin v5+** структура пакета изменилась:
+- Папка `contracts-upgradeable` **больше не существует как отдельный пакет**.
+- Все upgradeable-контракты теперь находятся **внутри основного пакета `@openzeppelin/contracts`**, в подпапке `upgradeable/`.
+
+👉 Поэтому импорты вида:
+```solidity
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+```
+— **не работают в v5+**.
+
+---
+
+### ✅ Правильное решение
+
+#### 1. Убедитесь, что установлена **OpenZeppelin v5+**
+```bash
+npm install @openzeppelin/contracts@^5.0.0
+```
+
+> ❌ Не устанавливайте `@openzeppelin/contracts-upgradeable` — его больше нет.
+
+#### 2. Обновите импорты в `ArbitrageExecutor.sol` на **новый формат**:
+
+```solidity
+// Было (НЕПРАВИЛЬНО для v5+):
+// import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+
+// Стало (ПРАВИЛЬНО для v5+):
+import "@openzeppelin/contracts/upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts/upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts/upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts/upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/upgradeable/access/AccessControlUpgradeable.sol";
+```
+
+> Обратите внимание: путь начинается с `@openzeppelin/contracts/upgradeable/...`, а не `@openzeppelin/contracts-upgradeable/...`.
+
+#### 3. Очистите кэш и пересоберите
+```bash
+npx hardhat clean
+npx hardhat compile
+```
+
+#### 4. Запустите деплой
+```bash
+npm run deploy:amoy
+```
+
+---
+
+### 📌 Дополнительно: проверьте `package.json`
+Убедитесь, что у вас **нет** в зависимостях:
+```json
+"@openzeppelin/contracts-upgradeable": "..."
+```
+
+Если есть — удалите:
+```bash
+npm uninstall @openzeppelin/contracts-upgradeable
+```
+
+---
+
+### ✅ После исправления
+- Контракт соберётся без ошибок `HH404`
+- UUPS-паттерн будет работать корректно
+- Деплой на Amoy пройдёт успешно
+
+Готов помочь с генерацией исправленного `ArbitrageExecutor.sol`, если нужно.

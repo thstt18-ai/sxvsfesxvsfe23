@@ -1,0 +1,123 @@
+ Цель агента (1 команда)
+Copy
+Создай встроенное окно «Полная торговля с подтверждением каждого шага» в проекте https://github.com/tgbotstests-droid/wgxvogxgwsxvsfe119:
+
+1. Встроенное окно «Полная торговля с подтверждением каждого шага»:
+   - тема: MUI dark, иконка: «⚡»
+   - открывается по кнопке «Полная торговля» в главном меню
+   - шаги: «Проверка → Развёртка → Подписание → Отправка → Заработок»
+
+2. Каждый шаг:
+   - название шага
+   - короткое описание (1-2 предложения)
+   - кнопка «Подтвердить» и «Отказаться»
+   - при «Отказаться» — баланс зачисляется на баланс кошелька (100 %)
+
+3. Шаги по-очереди:
+   - шаг 1: «Проверка» → проверка возможности обменов (getAmountsOut, price-impact, gas)
+   - шаг 2: «Развёртка» → вызов контракта Router.swapExactTokensForTokens
+   - шаг 3: «Подписание» → подпись через encrypted keystore (без Ledger)
+   - шаг 4: «Отправка» → отправка транзакции в сеть
+   - шаг 5: «Заработок» → возврат токенов на баланс кошелька (100 %) + лог прибыли
+
+4. Без GUI-ошибок:
+   - запускается через встроенный HTTP-сервер (Monaco + WebPreview)
+   - без Electron, без X11, без Docker
+   - без GUI-ошибок, без HH12, без платных функций
+
+5. README: как запустить и как пользоваться
+6. Проверка: `npm run dev` → открывается встроенный редактор, Gemini активен, ошибок нет
+2. Процесс «полная торговля с подтверждением каждого шага» (пошагово)
+Table
+Copy
+Этап	Название	Описание	Кнопки	Результат
+1. Проверка	«Проверка обменов»	«Проверяем price-impact, gas, slippage»	«Подтвердить» / «Отказаться»	переход к шагу 2 или возврат на баланс
+2. Развёртка	«Развёртка контракта»	«Вызываем Router.swapExactTokensForTokens»	«Подтвердить» / «Отказаться»	переход к шагу 3 или возврат на баланс
+3. Подписание	«Подписание транзакции»	«Подписываем через encrypted keystore»	«Подтвердить» / «Отказаться»	переход к шагу 4 или возврат на баланс
+4. Отправка	«Отправка транзакции»	«Отправляем транзакцию в сеть»	«Подтвердить» / «Отказаться»	переход к шагу 5 или возврат на баланс
+5. Заработок	«Заработок»	«Возвращаем токены на баланс кошелька (100 %) + лог прибыли»	автоматический	**возврат на баланс кошелька (100 %) + лог прибыли»
+4. Пример встроенного окна (React, без GUI)
+tsx
+Copy
+// packages/real-trade/src/TradeWindow.tsx
+import React, { useState } from 'react';
+import { Button, Typography, Box } from '@mui/material';
+
+const STEPS = [
+  { name: 'Проверка', desc: 'Проверяем price-impact, gas, slippage' },
+  { name: 'Развёртка', desc: 'Вызываем Router.swapExactTokensForTokens' },
+  { name: 'Подписание', desc: 'Подписываем через encrypted keystore' },
+  { name: 'Отправка', desc: 'Отправляем транзакцию в сеть' },
+  { name: 'Заработок', desc: 'Возвращаем токены на баланс кошелька (100 %) + лог прибыли' },
+];
+
+export default function TradeWindow() {
+  const [step, setStep] = useState(0);
+  const [result, setResult] = useState('');
+
+  const handleConfirm = async () => {
+    if (step === 4) {
+      setResult('Заработок: возврат на баланс кошелька (100 %)');
+      return;
+    }
+
+    // логика каждого шага (без GUI)
+    if (step === 0) {
+      const ok = await window.geminiAgent.checkSwap();
+      if (!ok) {
+        setResult('Отказ: высокий price-impact');
+        return;
+      }
+    }
+    if (step === 1) {
+      await window.geminiAgent.deployContract();
+    }
+    if (step === 2) {
+      await window.geminiAgent.signTransaction();
+    }
+    if (step === 3) {
+      await window.geminiAgent.sendTransaction();
+    }
+
+    setStep(step + 1);
+  };
+
+  const handleCancel = () => {
+    // возврат на баланс кошелька (100 %)
+    window.geminiAgent.returnToBalance();
+    setResult('Отказ: возврат на баланс кошелька (100 %)');
+  };
+
+  return (
+    <Box sx={{ p: 3, bgcolor: 'background.paper', borderRadius: 2 }}>
+      <Typography variant="h6">⚡ Этапы реальной торговли</Typography>
+      <Typography variant="body2" color="text.secondary">
+        {STEPS[step].desc}
+      </Typography>
+      <Box sx={{ mt: 2 }}>
+        <Button variant="contained" onClick={handleConfirm}>Подтвердить</Button>
+        <Button variant="outlined" onClick={handleCancel} sx={{ ml: 2 }}>Отказаться</Button>
+      </Box>
+      {result && <Typography sx={{ mt: 2 }}>{result}</Typography>}
+    </Box>
+  );
+}
+5. Краткая инструкция (1 команда)
+bash
+Copy
+# 1. переходим в правильную папку (где есть package.json)
+cd ~/replit-desktop
+
+# 2. запускаем Gemini-агент (без GUI)
+npm run ai
+
+# 3. запускаем встроенный скрипт (без GUI)
+npm run dev
+
+# 4. открывается встроенный редактор
+# открывается: http://localhost:8080 → вкладка «Этапы реальной торговли»
+6. Что получите после выполнения
+встроенное окно → Monaco + WebPreview, без GUI-ошибок
+весь депозит → на указанный адрес при «Подтвердить»
+возврат на баланс → 100 % при «Отказаться»
+всё прозрачно, без GUI-ошибок, бесплатно, в Cloud Shell

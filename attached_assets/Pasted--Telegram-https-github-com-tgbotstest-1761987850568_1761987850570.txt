@@ -1,0 +1,149 @@
+Ниже — конкретное **ТЗ «торговый ядро без Telegram»** по файлам репо  
+https://github.com/tgbotstests-droid/wgxvogxgwsxvsfe11  
+
+(после разбора tree, package.json, hardhat.config, bot/main.py, client/src и пр.)
+
+Цель: **одно и то же ядро** должно работать  
+- в режиме **симуляции** (paper-money, off-chain)  
+- в режиме **реального времени** (on-chain, real money)  
+**без** привязки к Telegram-боту.
+
+---
+
+### I. Общие требования к ядру
+
+1. **Язык**: TypeScript (уже используется в клиенте)  
+2. **Модуль**: `packages/core` (новая папка в монорепо)  
+3. **Окружение**:  
+   - `MODE=simulation` → off-chain, fake-балансы, fake-price  
+   - `MODE=live` → on-chain, real wallet, real RPC, real money  
+4. **Зависимости**: ethers, axios, tiny-emitter (event-bus), decimal.js  
+5. **Внешний API**:  
+   - цены: 1inch / Binance / CoinGecko  
+   - RPC: список из .env с failover (аналог уже есть в bot/)  
+6. **Конфигурация**: единый `core.config.ts` → читается в обоих режимах
+
+---
+
+### II. Симуляционный режим (paper-money)
+
+| Подмодуль | Обязательная функция | Описание |
+|-----------|----------------------|----------|
+| `SimMarket` | `getQuote(simPair)` | возвращает цену из Binance-REST (без подписи) |
+| `SimWallet` | `balanceOf(token)` | хранит балансы в памяти (json-файл) |
+| `SimExecutor` | `swap(simOrder)` | меняет балансы в памяти, считает комиссию 0.1 % |
+| `SimGas` | `estimateGas(tx)` | возвращает фикс 150 k gas, gasPrice = 30 Gwei |
+| `SimEventBus` | `on('Fill', handler)` | emitter для внешних подписчиков (дашборд, логгер) |
+
+**Файлы**:  
+- `sim/market.ts`  
+- `sim/wallet.ts`  
+- `sim/executor.ts`  
+- `sim/gas.ts`  
+- `sim/index.ts` (агрегирует выше)
+
+---
+
+### III. Реальный режим (live-money)
+
+| Подмодуль | Обязательная функция | Описание |
+|-----------|----------------------|----------|
+| `LiveMarket` | `getQuote(pair)` | 1inch `v5.2/quote` → возвращает `toAmount, gas, data` |
+| `LiveWallet` | `signAndSend(tx)` | hardware-wallet (Ledger) или encrypted Keystore |
+| `LiveExecutor` | `swap(order)` | строит `swapExactTokensForTokens`, подписывает, шлёт, ждёт receipt |
+| `LiveGas` | `getFeeData()` | динамический `maxFeePerGas = baseFee * 1.15` |
+| `LiveEventBus` | `on('Fill', handler)` | тот же emitter → внешний код не отличается от sim |
+
+**Файлы**:  
+- `live/market.ts`  
+- `live/wallet.ts`  
+- `live/executor.ts`  
+- `live/gas.ts`  
+- `live/index.ts`
+
+---
+
+### IV. Унифицированный интерфейс ядра
+
+`packages/core/src/trading-engine.ts`
+```typescript
+export class TradingEngine {
+  constructor(mode: 'simulation' | 'live', config: CoreConfig)
+  async start(): Promise<void>
+  async stop(): Promise<void>
+  async placeOrder(order: Order): Promise<OrderResult>
+  on(event: 'Fill' | 'Reject' | 'Error', handler: Function): void
+}
+```
+- Внешний код (React, CLI, cron-скрипт) использует **один и тот же** класс  
+- Внутри ядро подменяет модули (`sim/*` или `live/*`) по `mode`
+
+---
+
+### V. Конфигурация (без Telegram)
+
+`packages/core/core.config.ts`
+```typescript
+export interface CoreConfig {
+  mode: 'simulation' | 'live'
+  rpcUrls: string[]          // failover список
+  chainId: number
+  wallet: {
+    type: 'ledger' | 'keystore'
+    keystorePath?: string
+    password?: string
+    ledgerPath?: string
+  }
+  markets: {
+    routerAddress: string
+    tokens: { symbol: string; address: string; decimals: number }[]
+  }
+  risk: {
+    maxPositionUSD: number
+    maxDailyLossUSD: number
+    maxGasGwei: number
+  }
+}
+```
+Читается из `.env` → **все секреты** хранятся в `process.env` (не в repo).
+
+---
+
+### VI. Симуляция vs Live: минимальные отличия
+
+| Параметр | Simulation | Live |
+|----------|------------|------|
+| Балансы | JSON-файл `sim-balances.json` | real on-chain |
+| Цена | Binance public REST | 1inch on-chain quote |
+| Gas | фикс 150k @ 30 Gwei | dynamic EIP-1559 |
+| Подпись | none | Ledger или Keystore |
+| Скорость | мгновенно | ~2-5 сек блок |
+
+---
+
+### VII. CI / CD обязательства
+
+1. **Foundry fuzz + slither** → high-severity = fail  
+2. **Byte-code size guard** > 24 KB = warning  
+3. **Storage-layout diff** → fail если слоты изменились  
+4. **Docker-compose** → `docker compose up` поднимает весь стек  
+5. **Prometheus-metrics endpoint** → `/metrics` (equity, win-rate, gas-used)
+
+---
+
+### VIII. Финальный вызов (пример)
+
+```typescript
+import { TradingEngine } from '@wgxvogxgwsxvsfe11/core'
+
+const engine = new TradingEngine('simulation', config)
+engine.on('Fill', (order) => console.log('Filled:', order))
+await engine.start()
+await engine.placeOrder({ side: 'buy', tokenIn: 'USDC', tokenOut: 'WMATIC', amountIn: 100 })
+await engine.stop()
+```
+Меняете `'simulation'` → `'live'` и **ничего больше не трогаете**.
+
+---
+
+**Итог**: одно ядро, два режима, **zero-Telegram**, **hardware-ключи**, **production-CI**, **Docker из коробки** → готов к **реальным деньгам** и **paper-тестам** без лишнего кода.

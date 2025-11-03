@@ -1,0 +1,70 @@
+~/workspace$ npm install drizzle-kit@latest
+
+up to date, audited 516 packages in 3s
+
+72 packages are looking for funding
+  run `npm fund` for details
+
+4 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+~/workspace$ npx drizzle-kit generate
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/home/runner/workspace/drizzle.config.ts'
+19 tables
+activity_logs 7 columns 0 indexes 1 fks
+alert_rules 9 columns 0 indexes 1 fks
+arbitrage_transactions 13 columns 0 indexes 1 fks
+bot_config 56 columns 0 indexes 1 fks
+bot_status 16 columns 0 indexes 1 fks
+circuit_breaker_events 10 columns 0 indexes 1 fks
+connected_wallets 8 columns 0 indexes 1 fks
+flash_loan_requests 13 columns 0 indexes 1 fks
+ledger_status 10 columns 0 indexes 1 fks
+open_positions 16 columns 0 indexes 1 fks
+performance_metrics 13 columns 0 indexes 1 fks
+risk_limits_tracking 14 columns 0 indexes 1 fks
+safe_transactions 15 columns 0 indexes 1 fks
+sessions 3 columns 1 indexes 0 fks
+telegram_messages 8 columns 0 indexes 1 fks
+token_whitelist 10 columns 0 indexes 1 fks
+users 7 columns 0 indexes 0 fks
+webhook_configs 15 columns 0 indexes 1 fks
+webhook_logs 15 columns 0 indexes 2 fks
+
+[✓] Your SQL migration file ➜ migrations/0000_numerous_ezekiel.sql 🚀
+~/workspace$ npx drizzle-kit migrate
+No config path provided, using default 'drizzle.config.ts'
+Reading config file '/home/runner/workspace/drizzle.config.ts'
+Using 'pg' driver for database querying
+~/workspace$ npm audit fix --force
+npm warn using --force Recommended protections disabled.
+npm warn audit Updating drizzle-kit to 0.18.1, which is a SemVer major change.
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated glob@8.1.0: Glob versions prior to v9 are no longer supported
+
+added 35 packages, removed 8 packages, changed 1 package, and audited 543 packages in 7s
+
+76 packages are looking for funding
+  run `npm fund` for details
+
+# npm audit report
+
+esbuild  <=0.24.2
+Severity: moderate
+esbuild enables any website to send any requests to the development server and read the response - https://github.com/advisories/GHSA-67mh-4wv8-2f99
+fix available via `npm audit fix --force`
+Will install drizzle-kit@0.31.6, which is a breaking change
+node_modules/drizzle-kit/node_modules/esbuild
+  drizzle-kit  0.9.1 - 0.9.54 || 0.12.9 - 0.18.1 || 0.19.2-9340465 - 0.30.6 || 1.0.0-beta.1-00df263 - 1.0.0-beta.1-fd5d1e8
+  Depends on vulnerable versions of esbuild
+  node_modules/drizzle-kit
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+~/workspace$ 
